@@ -16,8 +16,8 @@
     background: #fff; border-radius: 3vmin; box-shadow: 0 0.5vmin 2vmin rgba(0,0,0,.08);
     height: 100%; width: 100%; padding: 3vmin;
     display: grid;
-    grid-template-rows: auto auto 1fr auto auto auto auto;
-    gap: 2.2vmin;
+    grid-template-rows: auto auto auto auto 1fr auto auto;
+    gap: 2vmin;
   }
   .head { display: flex; justify-content: space-between; align-items: center; gap: 2vmin; }
   h1 { font-size: clamp(1.4rem, 5vmin, 2.6rem); }
@@ -25,23 +25,38 @@
     font-size: clamp(.8rem, 2.6vmin, 1.2rem); padding: 1vmin 2vmin; border-radius: 1.5vmin;
     border: 1px solid #cdd3df; background: #f7f9fc; color: #445; cursor: pointer; white-space: nowrap;
   }
-  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.6vmin; }
+  .top { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6vmin; }
   .field label {
-    display: block; font-size: clamp(.8rem, 2.6vmin, 1.25rem);
-    font-weight: 600; color: #445; margin-bottom: .8vmin;
+    display: block; font-size: clamp(.75rem, 2.4vmin, 1.1rem);
+    font-weight: 600; color: #445; margin-bottom: .6vmin;
   }
   input {
-    width: 100%; padding: 1.6vmin; font-size: clamp(1.2rem, 4.6vmin, 2.2rem);
-    border: 1px solid #cdd3df; border-radius: 1.6vmin; background: #fff;
+    width: 100%; padding: 1.2vmin; font-size: clamp(1.1rem, 3.6vmin, 1.8rem);
+    border: 1px solid #cdd3df; border-radius: 1.4vmin; background: #fff;
   }
   input:focus { outline: 0.5vmin solid #4a7dff; border-color: transparent; }
-  .fsi { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6vmin; text-align: center; }
+  .fixed {
+    border: 1px solid #e1e6ef; border-radius: 1.4vmin; background: #f7f9fc;
+    padding: 1.2vmin; display: flex; flex-direction: column; justify-content: center;
+  }
+  .fixed b { font-size: clamp(1.1rem, 3.6vmin, 1.8rem); color: #445; }
+  .fixed small { font-size: clamp(.75rem, 2.4vmin, 1.1rem); color: #556; font-weight: 600; }
+
+  .big-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.6vmin; }
+  .big-inputs input {
+    padding: 2.4vmin 1.2vmin; font-size: clamp(1.8rem, 8vmin, 3.6rem);
+    font-weight: 700; text-align: center;
+  }
+  .big-inputs label { text-align: center; font-size: clamp(.8rem, 2.6vmin, 1.25rem); }
+
+  .fsi { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2vmin; text-align: center; }
   .chip {
-    background: #eef3ff; color: #1f3d91; border-radius: 2vmin; padding: 2vmin 1vmin;
+    background: #eef3ff; color: #1f3d91; border-radius: 1.6vmin; padding: 1.2vmin 1vmin;
     display: flex; flex-direction: column; justify-content: center;
   }
-  .chip b { display: block; font-size: clamp(1.8rem, 8vmin, 4.2rem); line-height: 1.1; }
-  .chip small { font-size: clamp(.8rem, 2.6vmin, 1.3rem); color: #556; }
+  .chip b { display: block; font-size: clamp(1.1rem, 4vmin, 2rem); line-height: 1.1; }
+  .chip small { font-size: clamp(.7rem, 2.2vmin, 1rem); color: #556; }
+
   .result {
     border-radius: 2.5vmin; padding: 2vmin; text-align: center;
     background: #e8f7ee; color: #0f5a2c;
@@ -67,10 +82,13 @@
     <button class="reset" id="reset" type="button">Ripristina</button>
   </div>
 
-  <div class="grid">
+  <div class="top">
     <div class="field"><label for="tdd">Dose totale/die (U)</label><input id="tdd" inputmode="decimal" value="14,5"></div>
+    <div class="fixed"><small>Target</small><b>110 mg/dL</b></div>
+  </div>
+
+  <div class="big-inputs">
     <div class="field"><label for="now">Glicemia attuale</label><input id="now" inputmode="numeric" value="211"></div>
-    <div class="field"><label for="target">Target</label><input id="target" inputmode="numeric" value="110"></div>
     <div class="field"><label for="carbs">Carboidrati (g)</label><input id="carbs" inputmode="numeric" value="0"></div>
     <div class="field"><label for="iob">Insulina attiva (U)</label><input id="iob" inputmode="decimal" value="0,98"></div>
   </div>
@@ -96,9 +114,10 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const FIELDS = ['tdd', 'now', 'target', 'carbs', 'iob'];
+  const TARGET = 110;                       // target preimpostato
+  const FIELDS = ['tdd', 'now', 'carbs', 'iob'];
   const KEY = 'calcoloInsulina.v1';
-  const DEFAULTS = { tdd: '14,5', now: '211', target: '110', carbs: '0', iob: '0,98' };
+  const DEFAULTS = { tdd: '14,5', now: '211', carbs: '0', iob: '0,98' };
 
   function num(id) {
     const raw = $(id).value.trim().replace(',', '.');
@@ -117,34 +136,31 @@
     } catch (e) { /* memoria non disponibile: l'app funziona comunque */ }
   }
   function loadValues() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-      FIELDS.forEach(id => {
-        $(id).value = saved && saved[id] !== undefined ? saved[id] : DEFAULTS[id];
-      });
-    } catch (e) {
-      FIELDS.forEach(id => $(id).value = DEFAULTS[id]);
-    }
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    FIELDS.forEach(id => {
+      $(id).value = saved && saved[id] !== undefined ? saved[id] : DEFAULTS[id];
+    });
   }
 
   function calc() {
-    const tdd = num('tdd'), now = num('now'), target = num('target');
+    const tdd = num('tdd'), now = num('now');
     const carbs = num('carbs') ?? 0, iob = num('iob') ?? 0;
     const box = $('result');
 
     saveValues();
 
-    if (!tdd || tdd <= 0 || now === null || target === null) {
+    if (!tdd || tdd <= 0 || now === null) {
       box.className = 'result warn';
       $('dose').textContent = '--';
-      $('note').textContent = 'Inserisci dose, glicemia e target';
+      $('note').textContent = 'Inserisci dose e glicemia attuale';
       return;
     }
 
     const icr = 500 / tdd;
     const isf = 1800 / tdd;
     const carbDose = carbs / icr;
-    const corrDose = Math.max(0, (now - target) / isf);
+    const corrDose = Math.max(0, (now - TARGET) / isf);
     const total = carbDose + corrDose - iob;
     const dose = Math.max(0, total);
 
