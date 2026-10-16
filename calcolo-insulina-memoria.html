@@ -16,7 +16,7 @@
     background: #fff; border-radius: 3vmin; box-shadow: 0 0.5vmin 2vmin rgba(0,0,0,.08);
     height: 100%; width: 100%; padding: 3vmin;
     display: grid;
-    grid-template-rows: auto auto auto auto 1fr auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto 1fr auto auto auto;
     gap: 1.8vmin;
   }
   .head { display: flex; justify-content: space-between; align-items: center; gap: 2vmin; }
@@ -121,6 +121,11 @@
     <div class="field"><label for="iob">Insulina attiva (U)</label><input id="iob" inputmode="decimal" value="0,98"></div>
   </div>
 
+  <div class="actions">
+    <div id="status"></div>
+    <button class="confirm" id="confirm" type="button">Conferma</button>
+  </div>
+
   <div class="fsi">
     <div class="chip"><small>FSI (1 U abbassa di)</small><b id="isf">--</b><small>mg/dL</small></div>
     <div class="chip"><small>ICR (1 U copre)</small><b id="icr">--</b><small>g carboidrati</small></div>
@@ -135,11 +140,6 @@
     <div><span>Per i carboidrati</span><span id="r-carb">--</span></div>
     <div><span>Per la correzione</span><span id="r-corr">--</span></div>
     <div><span>Insulina attiva sottratta</span><span id="r-iob">--</span></div>
-  </div>
-
-  <div class="actions">
-    <div id="status"></div>
-    <button class="confirm" id="confirm" type="button">Conferma</button>
   </div>
 
   <div class="history">
