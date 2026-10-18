@@ -6,6 +6,7 @@
 <title>Calcolo insulina</title>
 <style>
   * { box-sizing: border-box; margin: 0; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -32,7 +33,8 @@
   }
   input {
     width: 100%; padding: 1.2vmin; font-size: clamp(1.1rem, 3.6vmin, 1.8rem);
-    border: 1px solid #cdd3df; border-radius: 1.4vmin; background: #fff;
+    border: 1px solid #cdd3df; border-radius: 1.4vmin; background: #fff; color: #1d2330;
+    font-family: inherit;
   }
   input:focus { outline: 0.5vmin solid #4a7dff; border-color: transparent; }
   input:disabled { background: #f1f3f7; color: #667; }
@@ -43,12 +45,18 @@
   .fixed b { font-size: clamp(1.1rem, 3.6vmin, 1.8rem); color: #445; }
   .fixed small { font-size: clamp(.75rem, 2.4vmin, 1.1rem); color: #556; font-weight: 600; }
 
-  .big-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.6vmin; }
+  .big-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.6vmin; align-items: start; }
   .big-inputs input {
     padding: 2.4vmin 1.2vmin; font-size: clamp(1.8rem, 8vmin, 3.6rem);
     font-weight: 700; text-align: center;
   }
   .big-inputs label { text-align: center; font-size: clamp(.8rem, 2.6vmin, 1.25rem); }
+  .meal-btn {
+    margin-top: .8vmin; width: 100%; font-size: clamp(.8rem, 2.6vmin, 1.15rem);
+    padding: 1vmin .5vmin; border-radius: 1.4vmin; border: 1px solid #b9c8f0;
+    background: #eef3ff; color: #1f3d91; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .meal-btn:disabled { opacity: .5; cursor: default; }
 
   .fsi { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2vmin; text-align: center; }
   .chip {
@@ -79,7 +87,7 @@
   .confirm {
     font-size: clamp(1.1rem, 4.2vmin, 2rem); font-weight: 700; padding: 2vmin 4vmin;
     border: 0; border-radius: 2vmin; background: #4a7dff; color: #fff; cursor: pointer;
-    white-space: nowrap;
+    white-space: nowrap; font-family: inherit;
   }
   .confirm.done { background: #2f9e5b; }
 
@@ -101,6 +109,76 @@
   .history .empty { color: #889; }
 
   .disc { font-size: clamp(.7rem, 2.2vmin, 1.1rem); color: #778; line-height: 1.3; }
+
+  /* ---------- Pannello "Componi il pasto" ---------- */
+  .sheet {
+    position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 10;
+    max-width: 720px; margin: 0 auto; background: #fff;
+    box-shadow: 0 0 24px rgba(0,0,0,.15);
+    display: flex; flex-direction: column; gap: .7rem; padding: 1rem;
+  }
+  .sheet-head { display: flex; justify-content: space-between; align-items: center; }
+  .sheet-head h2 { font-size: 1.3rem; }
+  .x {
+    font-size: 1.1rem; border: 0; background: #f1f3f7; border-radius: 999px;
+    width: 2.4rem; height: 2.4rem; cursor: pointer; color: #334;
+  }
+  .search-row { display: flex; gap: .5rem; }
+  .search-row input { flex: 1; min-width: 0; font-size: 1.1rem; padding: .7rem; border-radius: .7rem; }
+  .ghost {
+    font-size: .9rem; padding: .6rem .8rem; border-radius: .7rem; border: 1px solid #cdd3df;
+    background: #f7f9fc; color: #334; cursor: pointer; white-space: nowrap; font-family: inherit;
+  }
+  .hint { font-size: .8rem; color: #667; }
+  .results {
+    list-style: none; padding: 0; max-height: 38vh; overflow: auto;
+    border: 1px solid #e1e6ef; border-radius: .8rem; flex-shrink: 0;
+  }
+  .res {
+    display: flex; justify-content: space-between; align-items: center; gap: .6rem;
+    padding: .6rem .7rem; border-bottom: 1px solid #eef0f5; cursor: pointer;
+  }
+  .res:last-child { border-bottom: 0; }
+  .res:hover { background: #f5f8ff; }
+  .res-left { display: flex; flex-direction: column; min-width: 0; }
+  .res-name { font-weight: 600; font-size: .95rem; overflow-wrap: anywhere; }
+  .res small, .item small { color: #667; font-size: .75rem; }
+  .res-carb { font-size: .85rem; color: #1f3d91; font-weight: 600; white-space: nowrap; }
+  .res.add .res-name { color: #2f6a3f; }
+  .res.info { cursor: default; color: #667; font-size: .85rem; }
+  .res.info:hover { background: none; }
+  .custom {
+    border: 1px solid #cfe0d4; background: #f3faf5; border-radius: .8rem;
+    padding: .8rem; display: grid; gap: .5rem; flex-shrink: 0;
+  }
+  .custom-title { font-weight: 700; }
+  .custom label { display: grid; gap: .25rem; font-size: .8rem; font-weight: 600; color: #445; }
+  .custom input { font-size: 1rem; padding: .55rem; border-radius: .6rem; }
+  .custom-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+  .custom-msg { color: #8a1212; font-size: .8rem; min-height: 1em; }
+  .custom-btns { display: flex; justify-content: flex-end; gap: .5rem; }
+  .meal-title { font-weight: 700; font-size: 1rem; margin-top: .2rem; }
+  .items { list-style: none; padding: 0; flex: 1; overflow: auto; min-height: 4rem; }
+  .item { display: flex; align-items: center; gap: .45rem; padding: .5rem 0; border-bottom: 1px solid #eef0f5; }
+  .item-left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .item-name { font-weight: 600; font-size: .95rem; overflow-wrap: anywhere; }
+  .item-g { width: 4.2rem; font-size: 1rem; padding: .45rem; text-align: right; border-radius: .6rem; }
+  .unit { font-size: .85rem; color: #667; }
+  .item-carb { min-width: 3.8rem; text-align: right; font-weight: 700; color: #1f3d91; white-space: nowrap; }
+  .rm {
+    border: 0; background: #fde2e2; color: #8a1212; border-radius: 999px;
+    width: 2rem; height: 2rem; cursor: pointer; flex-shrink: 0;
+  }
+  .items .empty { color: #889; font-size: .9rem; padding: .6rem 0; }
+  .sheet-foot {
+    display: flex; justify-content: space-between; align-items: center; gap: .8rem;
+    border-top: 1px solid #e1e6ef; padding-top: .8rem; flex-wrap: wrap;
+  }
+  .total { font-size: 1rem; }
+  .total b { font-size: 1.6rem; color: #0f5a2c; }
+  .foot-btns { display: flex; gap: .5rem; }
+  .confirm.small { font-size: 1.05rem; padding: .7rem 1.2rem; border-radius: .8rem; }
+  .sheet .disc { font-size: .75rem; }
 </style>
 </head>
 <body>
@@ -117,7 +195,10 @@
 
   <div class="big-inputs">
     <div class="field"><label for="now">Glicemia attuale</label><input id="now" inputmode="numeric" value="211"></div>
-    <div class="field"><label for="carbs">Carboidrati (g)</label><input id="carbs" inputmode="numeric" value="0"></div>
+    <div class="field">
+      <label for="carbs">Carboidrati (g)</label><input id="carbs" inputmode="numeric" value="0">
+      <button class="meal-btn" id="mealBtn" type="button">🍽 Componi pasto</button>
+    </div>
     <div class="field"><label for="iob">Insulina attiva (U)</label><input id="iob" inputmode="decimal" value="0,98"></div>
   </div>
 
@@ -153,15 +234,162 @@
   <div class="disc">Strumento di supporto: segui sempre le indicazioni del tuo medico. Con glicemia sotto 70 non fare bolo: tratta prima l'ipoglicemia. I valori restano salvati su questo dispositivo.</div>
 </div>
 
+<!-- Pannello per comporre il pasto e contare i carboidrati -->
+<div class="sheet" id="meal" hidden>
+  <div class="sheet-head">
+    <h2>Componi il pasto</h2>
+    <button class="x" id="mealClose" type="button" aria-label="Chiudi">✕</button>
+  </div>
+
+  <div class="search-row">
+    <input id="q" type="text" placeholder="Cosa mangi? es. pasta 80" autocomplete="off" enterkeyhint="search">
+    <button class="ghost" id="online" type="button">Cerca online</button>
+  </div>
+  <div class="hint">Scrivi l'alimento e, se vuoi, i grammi. Tocca un risultato per aggiungerlo. "Cerca online" trova i prodotti confezionati.</div>
+
+  <ul class="results" id="results" hidden></ul>
+
+  <div class="custom" id="custom" hidden>
+    <div class="custom-title">Nuovo alimento personale</div>
+    <label>Nome<input id="cName" type="text" autocomplete="off"></label>
+    <div class="custom-row">
+      <label>Carboidrati per 100 g<input id="cPer" inputmode="decimal" placeholder="dall'etichetta"></label>
+      <label>Porzione (g)<input id="cPortion" inputmode="decimal" placeholder="100"></label>
+    </div>
+    <div class="custom-msg" id="cMsg"></div>
+    <div class="custom-btns">
+      <button class="ghost" id="cCancel" type="button">Annulla</button>
+      <button class="confirm small" id="cSave" type="button">Salva e aggiungi</button>
+    </div>
+  </div>
+
+  <div class="meal-title">Il tuo pasto</div>
+  <ul class="items" id="items"></ul>
+
+  <div class="sheet-foot">
+    <div class="total">Totale carboidrati <b id="mealTotal">0 g</b></div>
+    <div class="foot-btns">
+      <button class="ghost" id="mealClear" type="button">Svuota</button>
+      <button class="confirm small" id="mealUse" type="button">Usa nel calcolo</button>
+    </div>
+  </div>
+  <div class="disc">Valori indicativi per 100 g di alimento. Per i prodotti confezionati controlla sempre l'etichetta.</div>
+</div>
+
 <script>
   const $ = id => document.getElementById(id);
   const TARGET = 110;                       // target preimpostato
   const FIELDS = ['tdd', 'now', 'carbs', 'iob'];
   const KEY = 'calcoloInsulina.v1';
   const HKEY = 'calcoloInsulina.storico.v1';
+  const MKEY = 'calcoloInsulina.pasto.v1';
+  const CKEY = 'calcoloInsulina.alimenti.v1';
   const HMAX = 20;
   const DEFAULTS = { tdd: '14,5', now: '211', carbs: '0', iob: '0,98' };
   let confirmed = false;
+
+  // Alimenti comuni: [nome, g di carboidrati per 100 g, porzione tipica in g, parole chiave]
+  // Valori indicativi medi (tabelle di composizione ed etichette tipiche).
+  const FOODS = [
+    ['Pasta secca (peso crudo)', 71, 80, 'spaghetti penne maccheroni fusilli rigatoni linguine farfalle bucatini paccheri tortiglioni semola'],
+    ['Pasta cotta (peso cotto)', 30, 200, 'spaghetti penne maccheroni fusilli rigatoni lessata'],
+    ['Pasta integrale (peso crudo)', 64, 80, 'spaghetti penne integrali'],
+    ["Pasta all'uovo secca (peso crudo)", 68, 80, 'tagliatelle fettuccine pappardelle'],
+    ["Pasta fresca all'uovo (peso crudo)", 50, 120, 'tagliatelle fettuccine fresche lasagne fresche'],
+    ['Tortellini / ravioli freschi', 45, 125, 'tortellini ravioli agnolotti cappelletti pasta ripiena'],
+    ['Gnocchi di patate', 33, 150, 'gnocchi'],
+    ['Riso (peso crudo)', 78, 80, 'riso basmati carnaroli arborio parboiled'],
+    ['Riso cotto (peso cotto)', 28, 180, 'riso lessato bollito'],
+    ['Risotto (cotto)', 22, 250, 'risotto'],
+    ['Pane comune', 56, 50, 'pane bianco pagnotta filone casereccio'],
+    ['Pane integrale', 44, 50, 'pane integrale'],
+    ['Pane in cassetta', 48, 30, 'pancarre pan carre toast tramezzino bauletto'],
+    ['Panino / rosetta', 57, 60, 'panino rosetta michetta ciabatta'],
+    ['Grissini', 68, 20, 'grissino'],
+    ['Cracker', 68, 25, 'crackers'],
+    ['Fette biscottate', 73, 10, 'fetta biscottata'],
+    ['Piadina', 52, 100, 'piada'],
+    ['Focaccia', 48, 100, 'focaccia'],
+    ['Pizza margherita', 33, 300, 'pizza'],
+    ['Farina', 72, 50, 'farina 00 grano'],
+    ['Polenta (cotta)', 15, 250, 'polenta'],
+    ['Cous cous (peso crudo)', 72, 70, 'couscous cuscus'],
+    ['Cous cous (peso cotto)', 22, 150, 'couscous cuscus'],
+    ['Orzo perlato (peso crudo)', 70, 70, 'orzo'],
+    ['Farro (peso crudo)', 65, 70, 'farro'],
+    ['Corn flakes', 84, 30, 'cereali colazione cornflakes fiocchi mais'],
+    ['Muesli', 63, 40, 'cereali colazione'],
+    ["Fiocchi d'avena", 59, 40, 'avena porridge'],
+    ['Biscotti frollini', 68, 30, 'biscotti frollini'],
+    ['Biscotti secchi', 75, 25, 'biscotti secchi'],
+    ['Cornetto / brioche semplice', 47, 50, 'cornetto brioche croissant'],
+    ['Cornetto con marmellata o crema', 52, 70, 'cornetto brioche croissant farcito'],
+    ['Merendina', 55, 35, 'merendina snack'],
+    ['Torta tipo margherita', 55, 60, 'torta ciambella plumcake dolce'],
+    ['Crostata', 58, 80, 'crostata torta marmellata dolce'],
+    ['Tiramisù', 30, 120, 'tiramisu dolce'],
+    ['Panettone', 56, 80, 'panettone natale'],
+    ['Pandoro', 54, 80, 'pandoro natale'],
+    ['Gelato', 25, 100, 'gelato cono coppetta'],
+    ['Budino', 20, 125, 'budino'],
+    ['Patate lesse', 17, 200, 'patate patata bollite'],
+    ['Patate al forno', 25, 150, 'patate patata arrosto'],
+    ['Purè di patate', 14, 200, 'pure purea patate'],
+    ['Patatine fritte', 35, 120, 'patatine fritte'],
+    ['Patatine in busta', 51, 25, 'patatine chips'],
+    ['Fagioli (cotti)', 14, 150, 'fagioli borlotti cannellini legumi'],
+    ['Ceci (cotti)', 16, 150, 'ceci legumi'],
+    ['Lenticchie (cotte)', 13, 150, 'lenticchie legumi'],
+    ['Piselli (cotti)', 9, 100, 'piselli legumi'],
+    ['Mais dolce', 14, 80, 'mais granturco'],
+    ['Verdura (insalata, zucchine, spinaci…)', 3, 150, 'verdura verdure insalata lattuga zucchine spinaci broccoli cavolfiore melanzane peperoni fagiolini contorno'],
+    ['Pomodori', 3, 150, 'pomodoro'],
+    ['Carote', 7, 100, 'carota'],
+    ['Passata di pomodoro', 5, 100, 'sugo pomodoro salsa'],
+    ['Minestrone (senza pasta)', 6, 250, 'minestrone zuppa verdure'],
+    ['Mela', 11, 150, 'mela frutta'],
+    ['Pera', 11, 150, 'pera frutta'],
+    ['Banana', 20, 120, 'banana frutta'],
+    ['Arancia', 9, 150, 'arancia frutta'],
+    ['Mandarino / clementina', 11, 80, 'mandarino clementina frutta'],
+    ['Kiwi', 11, 80, 'kiwi frutta'],
+    ['Uva', 16, 150, 'uva frutta'],
+    ['Fragole', 6, 150, 'fragola frutta'],
+    ['Pesca', 8, 150, 'pesca frutta'],
+    ['Albicocche', 9, 100, 'albicocca frutta'],
+    ['Ciliegie', 13, 100, 'ciliegia frutta'],
+    ['Anguria', 7, 300, 'anguria cocomero frutta'],
+    ['Melone', 7, 200, 'melone frutta'],
+    ['Ananas', 11, 150, 'ananas frutta'],
+    ['Fichi', 16, 100, 'fico frutta'],
+    ['Cachi', 16, 150, 'caco kaki frutta'],
+    ['Succo di frutta', 12, 200, 'succo bevanda'],
+    ["Spremuta d'arancia", 9, 200, 'spremuta arancia succo'],
+    ['Latte', 5, 200, 'latte intero parzialmente scremato'],
+    ['Cappuccino (senza zucchero)', 4, 150, 'cappuccino caffelatte'],
+    ['Yogurt bianco', 4, 125, 'yogurt naturale greco'],
+    ['Yogurt alla frutta', 14, 125, 'yogurt'],
+    ['Mozzarella', 1, 125, 'mozzarella formaggio'],
+    ['Ricotta', 4, 100, 'ricotta formaggio'],
+    ['Formaggio stagionato', 0, 50, 'formaggio parmigiano grana pecorino'],
+    ['Carne (manzo, pollo, maiale…)', 0, 150, 'carne bistecca pollo manzo maiale tacchino vitello hamburger'],
+    ['Pesce', 0, 150, 'pesce tonno salmone merluzzo'],
+    ['Uova', 1, 60, 'uovo frittata'],
+    ['Prosciutto / salumi', 0, 50, 'prosciutto salame bresaola mortadella salumi'],
+    ['Lasagne al forno', 15, 300, 'lasagne lasagna'],
+    ['Pasta condita al pomodoro (cotta)', 25, 250, 'pasta al sugo pomodoro'],
+    ['Arancino', 32, 200, 'arancino arancina'],
+    ['Sushi', 28, 200, 'sushi'],
+    ['Zucchero', 100, 5, 'zucchero cucchiaino'],
+    ['Miele', 80, 10, 'miele'],
+    ['Marmellata', 55, 20, 'marmellata confettura'],
+    ['Crema di nocciole (tipo Nutella)', 57, 20, 'nutella crema spalmabile'],
+    ['Cioccolato al latte', 55, 20, 'cioccolato cioccolata'],
+    ['Cioccolato fondente', 33, 20, 'cioccolato cioccolata fondente'],
+    ['Bibita zuccherata (tipo cola)', 11, 330, 'coca cola aranciata bibita gassata'],
+    ['Tè freddo', 8, 330, 'te the freddo'],
+    ['Birra', 3, 330, 'birra'],
+  ];
 
   function num(id) {
     const raw = $(id).value.trim().replace(',', '.');
@@ -170,49 +398,52 @@
     return isNaN(v) ? null : v;
   }
   function fmt(n, d = 2) { return n.toFixed(d).replace('.', ','); }
+  function g1(n) { return String(Math.round(n * 10) / 10).replace('.', ','); }
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function loadJSON(k, d) {
+    try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; }
+  }
+  function saveJSON(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* memoria non disponibile */ }
+  }
 
   // Salvataggio e caricamento dei valori inseriti (memoria sul dispositivo)
   function saveValues() {
-    try {
-      const data = {};
-      FIELDS.forEach(id => data[id] = $(id).value);
-      localStorage.setItem(KEY, JSON.stringify(data));
-    } catch (e) { /* memoria non disponibile: l'app funziona comunque */ }
+    const data = {};
+    FIELDS.forEach(id => data[id] = $(id).value);
+    saveJSON(KEY, data);
   }
   function loadValues() {
-    let saved = null;
-    try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    const saved = loadJSON(KEY, null);
     FIELDS.forEach(id => {
       $(id).value = saved && saved[id] !== undefined ? saved[id] : DEFAULTS[id];
     });
   }
 
   // Storico dei calcoli confermati
-  function loadHistory() {
-    try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { return []; }
-  }
-  function saveHistory(list) {
-    try { localStorage.setItem(HKEY, JSON.stringify(list)); } catch (e) {}
-  }
+  function loadHistory() { const l = loadJSON(HKEY, []); return Array.isArray(l) ? l : []; }
+  function saveHistory(list) { saveJSON(HKEY, list); }
   function renderHistory() {
     const list = loadHistory();
     const ul = $('list');
     ul.innerHTML = '';
     if (list.length === 0) {
-      const li = document.createElement('li');
-      li.className = 'empty';
-      li.innerHTML = '<span>Nessun calcolo confermato</span><span></span>';
+      const li = el('li', 'empty');
+      li.append(el('span', null, 'Nessun calcolo confermato'), el('span'));
       ul.appendChild(li);
       return;
     }
     list.slice(0, 3).forEach(item => {
-      const li = document.createElement('li');
-      const left = document.createElement('span');
-      left.textContent = item.time + ' · glicemia ' + item.now + ' · carb. ' + item.carbs + ' g';
-      const right = document.createElement('span');
-      right.textContent = item.dose + ' U';
-      li.appendChild(left);
-      li.appendChild(right);
+      const li = el('li');
+      li.append(
+        el('span', null, item.time + ' · glicemia ' + item.now + ' · carb. ' + item.carbs + ' g'),
+        el('span', null, item.dose + ' U')
+      );
       ul.appendChild(li);
     });
   }
@@ -224,6 +455,7 @@
 
   function setLocked(lock) {
     FIELDS.forEach(id => $(id).disabled = lock);
+    $('mealBtn').disabled = lock;
   }
 
   function calc() {
@@ -276,6 +508,214 @@
     $('status').textContent = '';
   }
 
+  // ---------- Pasto: ricerca alimenti e conteggio carboidrati ----------
+  let meal = [];
+  let customFoods = [];
+  let typedGrams = null;
+
+  function norm(s) {
+    return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  }
+  function allFoods() {
+    return customFoods.map(f => ({ name: f.name, per100: f.per100, portion: f.portion, keys: '', mine: true }))
+      .concat(FOODS.map(f => ({ name: f[0], per100: f[1], portion: f[2], keys: f[3] || '' })));
+  }
+  // "pasta 80" -> testo "pasta", grammi 80
+  function parseQuery(raw) {
+    const m = raw.trim().match(/^(.*?)[\s,]*(\d+(?:[.,]\d+)?)\s*(?:g|gr|grammi)?\.?$/i);
+    if (m && m[1].trim()) return { text: m[1].trim(), grams: parseFloat(m[2].replace(',', '.')) };
+    return { text: raw.trim(), grams: null };
+  }
+  function searchLocal(text) {
+    const q = norm(text);
+    if (q.length < 2) return [];
+    const words = q.split(/\s+/);
+    const out = [];
+    allFoods().forEach((f, i) => {
+      const n = norm(f.name), hay = n + ' ' + norm(f.keys);
+      if (!words.every(w => hay.includes(w))) return;
+      const score = (n.startsWith(q) ? 0 : n.includes(q) ? 1 : 2) - (f.mine ? 0.5 : 0);
+      out.push({ f, score, i });
+    });
+    out.sort((a, b) => a.score - b.score || a.i - b.i);
+    return out.slice(0, 12).map(o => o.f);
+  }
+
+  function resultRow(f, grams) {
+    const g = grams ?? f.portion;
+    const li = el('li', 'res');
+    const left = el('div', 'res-left');
+    left.append(
+      el('span', 'res-name', (f.mine ? '★ ' : '') + f.name),
+      el('small', null, g1(f.per100) + ' g carb. per 100 g' + (f.online ? ' · online' : '') + (f.mine ? ' · personale' : ''))
+    );
+    li.append(left, el('span', 'res-carb', g + ' g → ' + g1(f.per100 * g / 100) + ' g'));
+    li.addEventListener('click', () => addItem(f.name, f.per100, g));
+    return li;
+  }
+  function customRow(text) {
+    const li = el('li', 'res add');
+    li.appendChild(el('span', 'res-name', '＋ Aggiungi «' + text + '» come alimento personale'));
+    li.addEventListener('click', () => openCustom(text));
+    return li;
+  }
+  function renderResults() {
+    const ul = $('results');
+    ul.innerHTML = '';
+    const { text, grams } = parseQuery($('q').value);
+    typedGrams = grams;
+    if (norm(text).length < 2) { ul.hidden = true; return; }
+    ul.hidden = false;
+    $('custom').hidden = true;
+    searchLocal(text).forEach(f => ul.appendChild(resultRow(f, grams)));
+    ul.appendChild(customRow(text));
+  }
+
+  function addItem(name, per100, grams) {
+    meal.push({ name, per100, grams });
+    saveJSON(MKEY, meal);
+    $('q').value = '';
+    renderResults();
+    renderMeal();
+  }
+  function mealTotal() {
+    return meal.reduce((s, it) => s + it.per100 * (it.grams || 0) / 100, 0);
+  }
+  function updateTotal() {
+    $('mealTotal').textContent = g1(mealTotal()) + ' g';
+    $('mealBtn').textContent = meal.length ? '🍽 Pasto (' + meal.length + ')' : '🍽 Componi pasto';
+  }
+  function renderMeal() {
+    const ul = $('items');
+    ul.innerHTML = '';
+    if (!meal.length) {
+      ul.appendChild(el('li', 'empty', 'Nessun alimento. Cerca e tocca un risultato per aggiungerlo.'));
+    }
+    meal.forEach((it, idx) => {
+      const li = el('li', 'item');
+      const left = el('div', 'item-left');
+      left.append(el('span', 'item-name', it.name), el('small', null, g1(it.per100) + ' g carb. per 100 g'));
+      const gIn = el('input', 'item-g');
+      gIn.inputMode = 'decimal';
+      gIn.value = String(it.grams).replace('.', ',');
+      gIn.setAttribute('aria-label', 'Grammi di ' + it.name);
+      const carb = el('span', 'item-carb', g1(it.per100 * it.grams / 100) + ' g');
+      gIn.addEventListener('input', () => {
+        const v = parseFloat(gIn.value.replace(',', '.'));
+        it.grams = isNaN(v) ? 0 : v;
+        carb.textContent = g1(it.per100 * it.grams / 100) + ' g';
+        saveJSON(MKEY, meal);
+        updateTotal();
+      });
+      const rm = el('button', 'rm', '✕');
+      rm.type = 'button';
+      rm.setAttribute('aria-label', 'Rimuovi ' + it.name);
+      rm.addEventListener('click', () => { meal.splice(idx, 1); saveJSON(MKEY, meal); renderMeal(); });
+      li.append(left, gIn, el('span', 'unit', 'g'), carb, rm);
+      ul.appendChild(li);
+    });
+    updateTotal();
+  }
+  function clearMeal() {
+    meal = [];
+    saveJSON(MKEY, meal);
+    renderMeal();
+  }
+
+  // Alimento personale (valori presi dall'etichetta)
+  function openCustom(name) {
+    $('cName').value = name;
+    $('cPer').value = '';
+    $('cPortion').value = typedGrams != null ? String(typedGrams).replace('.', ',') : '';
+    $('cMsg').textContent = '';
+    $('results').hidden = true;
+    $('custom').hidden = false;
+    $('cPer').focus();
+  }
+  function saveCustom() {
+    const name = $('cName').value.trim();
+    const per = parseFloat($('cPer').value.replace(',', '.'));
+    const portionRaw = parseFloat($('cPortion').value.replace(',', '.'));
+    const portion = isNaN(portionRaw) || portionRaw <= 0 ? 100 : portionRaw;
+    if (!name || isNaN(per) || per < 0 || per > 100) {
+      $('cMsg').textContent = 'Inserisci il nome e i carboidrati per 100 g (da 0 a 100).';
+      return;
+    }
+    customFoods = customFoods.filter(f => norm(f.name) !== norm(name));
+    customFoods.unshift({ name, per100: per, portion });
+    saveJSON(CKEY, customFoods);
+    $('custom').hidden = true;
+    addItem(name, per, portion);
+  }
+
+  // Ricerca online dei prodotti confezionati (Open Food Facts)
+  async function fetchJSON(url) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    } finally { clearTimeout(t); }
+  }
+  function toProduct(p) {
+    if (!p || !p.nutriments) return null;
+    let c = p.nutriments.carbohydrates_100g;
+    if (typeof c === 'string') c = parseFloat(c.replace(',', '.'));
+    const name = String(p.product_name_it || p.product_name || '').trim();
+    if (!name || typeof c !== 'number' || isNaN(c) || c < 0 || c > 100) return null;
+    const brandRaw = Array.isArray(p.brands) ? p.brands[0] : String(p.brands || '').split(',')[0];
+    const brand = String(brandRaw || '').trim();
+    return { name: brand ? name + ' – ' + brand : name, per100: Math.round(c * 10) / 10, portion: 100, online: true };
+  }
+  async function fetchOnline(text) {
+    const q = encodeURIComponent(text);
+    const fields = 'product_name,product_name_it,brands,nutriments';
+    let list;
+    try {
+      const d = await fetchJSON('https://search.openfoodfacts.org/search?q=' + q + '&langs=it&page_size=20&fields=' + fields);
+      list = d.hits || [];
+    } catch (e) {
+      const d = await fetchJSON('https://it.openfoodfacts.org/cgi/search.pl?search_terms=' + q +
+        '&search_simple=1&action=process&json=1&page_size=20&fields=' + fields);
+      list = d.products || [];
+    }
+    const seen = new Set();
+    return list.map(toProduct).filter(p => p && !seen.has(p.name) && seen.add(p.name)).slice(0, 10);
+  }
+  async function searchOnline() {
+    const { text, grams } = parseQuery($('q').value);
+    const ul = $('results');
+    if (norm(text).length < 2) { $('q').focus(); return; }
+    $('custom').hidden = true;
+    ul.hidden = false;
+    ul.innerHTML = '';
+    ul.appendChild(el('li', 'res info', 'Ricerca online in corso…'));
+    let products;
+    try { products = await fetchOnline(text); } catch (e) { products = null; }
+    ul.innerHTML = '';
+    if (products === null) {
+      ul.appendChild(el('li', 'res info', "Ricerca online non disponibile ora. Puoi aggiungere l'alimento a mano con i valori dell'etichetta."));
+    } else if (!products.length) {
+      ul.appendChild(el('li', 'res info', 'Nessun prodotto trovato online con i carboidrati indicati.'));
+    } else {
+      products.forEach(p => ul.appendChild(resultRow(p, grams)));
+    }
+    ul.appendChild(customRow(text));
+  }
+
+  function openMeal() {
+    if (confirmed) return;
+    $('meal').hidden = false;
+    $('q').value = '';
+    $('custom').hidden = true;
+    renderResults();
+    renderMeal();
+    $('q').focus();
+  }
+  function closeMeal() { $('meal').hidden = true; }
+
+  // ---------- Eventi ----------
   FIELDS.forEach(id => $(id).addEventListener('input', calc));
 
   $('confirm').addEventListener('click', () => {
@@ -309,6 +749,7 @@
       $('now').value = '';
       $('carbs').value = '';
       $('iob').value = '';
+      clearMeal();
       calc();
     }
   });
@@ -321,11 +762,41 @@
   $('reset').addEventListener('click', () => {
     leaveConfirmed();
     FIELDS.forEach(id => $(id).value = DEFAULTS[id]);
+    clearMeal();
     calc();
   });
 
+  $('mealBtn').addEventListener('click', openMeal);
+  $('mealClose').addEventListener('click', closeMeal);
+  $('q').addEventListener('input', renderResults);
+  $('q').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const first = $('results').querySelector('li.res:not(.add):not(.info)');
+    if (first) first.click();
+  });
+  $('online').addEventListener('click', searchOnline);
+  $('cSave').addEventListener('click', saveCustom);
+  $('cCancel').addEventListener('click', () => { $('custom').hidden = true; renderResults(); });
+  $('mealClear').addEventListener('click', clearMeal);
+  $('mealUse').addEventListener('click', () => {
+    $('carbs').value = String(Math.round(mealTotal()));
+    calc();
+    closeMeal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('meal').hidden) closeMeal();
+  });
+
+  // ---------- Avvio ----------
+  customFoods = loadJSON(CKEY, []);
+  if (!Array.isArray(customFoods)) customFoods = [];
+  meal = loadJSON(MKEY, []);
+  if (!Array.isArray(meal)) meal = [];
+
   loadValues();
   renderHistory();
+  updateTotal();
   calc();
 </script>
 </body>
