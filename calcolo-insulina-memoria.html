@@ -51,12 +51,10 @@
     font-weight: 700; text-align: center;
   }
   .big-inputs label { text-align: center; font-size: clamp(.8rem, 2.6vmin, 1.25rem); }
-  .meal-btn {
-    margin-top: .8vmin; width: 100%; font-size: clamp(.8rem, 2.6vmin, 1.15rem);
-    padding: 1vmin .5vmin; border-radius: 1.4vmin; border: 1px solid #b9c8f0;
-    background: #eef3ff; color: #1f3d91; font-weight: 600; cursor: pointer; white-space: nowrap;
-  }
-  .meal-btn:disabled { opacity: .5; cursor: default; }
+  .action-btns { display: flex; gap: 2vmin; width: 100%; justify-content: center; }
+  .action-btns .confirm { flex: 1 1 0; max-width: 24rem; padding: 2vmin 2vmin; }
+  .confirm.meal { background: #eef3ff; color: #1f3d91; box-shadow: inset 0 0 0 2px #b9c8f0; }
+  .confirm:disabled { opacity: .5; cursor: default; }
 
   .fsi { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2vmin; text-align: center; }
   .chip {
@@ -197,14 +195,16 @@
     <div class="field"><label for="now">Glicemia attuale</label><input id="now" inputmode="numeric" value="211"></div>
     <div class="field">
       <label for="carbs">Carboidrati (g)</label><input id="carbs" inputmode="numeric" value="0">
-      <button class="meal-btn" id="mealBtn" type="button">🍽 Componi pasto</button>
     </div>
     <div class="field"><label for="iob">Insulina attiva (U)</label><input id="iob" inputmode="decimal" value="0,98"></div>
   </div>
 
   <div class="actions">
+    <div class="action-btns">
+      <button class="confirm meal" id="mealBtn" type="button">🍽 Pasto</button>
+      <button class="confirm" id="confirm" type="button">Conferma</button>
+    </div>
     <div id="status"></div>
-    <button class="confirm" id="confirm" type="button">Conferma</button>
   </div>
 
   <div class="fsi">
@@ -583,7 +583,7 @@
   }
   function updateTotal() {
     $('mealTotal').textContent = g1(mealTotal()) + ' g';
-    $('mealBtn').textContent = meal.length ? '🍽 Pasto (' + meal.length + ')' : '🍽 Componi pasto';
+    $('mealBtn').textContent = meal.length ? '🍽 Pasto (' + meal.length + ')' : '🍽 Pasto';
   }
   function renderMeal() {
     const ul = $('items');
